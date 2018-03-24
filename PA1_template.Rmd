@@ -1,0 +1,81 @@
+---
+title: "C5_Assignment1"
+author: "Mohsin"
+date: "March 23, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+library(ggplot2)
+library(knitr) 
+library(markdown)
+library(Hmisc)
+library(lubridate)
+
+
+
+
+# (1) Total Steps Taken in a Day
+```{r, echo=TRUE}
+
+datac<-read.csv("./Course5/activity.csv") 
+str(datac)
+names(datac)
+steps <- aggregate(datac$steps, by = list(datac$date), sum, na.rm=TRUE) 
+hist(steps[,2],main="Histogram:Total Steps Taken in a Day",col="pink", border="red",xlab="Step Count")
+
+```
+
+
+# (2) Calculate Mean and Median of the Total Number of Steps Taken Daily
+```{r,echo=TRUE}
+steps_mean <- mean(steps[,2]) 
+steps_median <- median(steps[,2])
+print(steps_mean)
+print(steps_median)
+```
+
+# (3) Average Daily Pattern of Activity
+```{r,echo=TRUE}
+stepavg <- aggregate(steps ~ interval, data = datac, mean, na.rm = TRUE)
+
+plot(stepavg$interval, stepavg$steps, type = "l", lwd = 2.5, col = "blue",
+     main = "Average/Mean of Steps Taken", xlab = "Five Minute interval", ylab = "Steps(average)")
+```
+
+
+# (4) Inputting Missing Values
+## This task is achieved by the 'Hmisc' package function called impute which fills in the missing values with arbitrary constants: You can search to fetch the help contents '?impute'
+```{r,echo=TRUE}
+library(Hmisc)
+missingval <- length(which(is.na(datac$steps)))
+imputed <- datac
+imputed$steps <- impute(datac$steps, fun=mean)
+imputedstepsd <- tapply(imputed$steps, imputed$date, sum)
+hist(imputedstepsd,main="Histogram of Total Number of Steps(Missing Values Imputed)",col="beige",border = "brown",xlab="Imputed_Steps")
+```
+ 
+
+#(5) Weekday and Weekend Steps
+
+```{r, echo=TRUE}
+library(ggplot2)
+ds<-datac$date
+dss<-as.Date(ds)
+dayz<-weekdays(dss)
+datac$dayz<-dayz
+dayz<-as.character(dayz)
+wkday<-subset(datac,dayz==c("Monday","Tuesday","Wednesday","Thursday","Friday"))
+wkend<-subset(datac,dayz==c("Satuday","Sunday"))
+par(mfrow=c(1,2))
+wkday_sb<-aggregate(steps~interval,wkday,mean,na.rm=TRUE)
+wkend_sb<-aggregate(steps~interval,wkend,mean,na.rm=TRUE)  
+plot1<- ggplot(wkday_sb, aes(interval, steps))
+plot1 + geom_line(color = "pink",size=1)+theme_bw()+ggtitle("Weekday")
+plot2<- ggplot(wkend_sb, aes(interval, steps))
+plot2 + geom_line(color = "brown",size=1)+theme_bw()+ggtitle("Weekend")
+```
